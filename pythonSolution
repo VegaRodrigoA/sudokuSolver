@@ -1,0 +1,130 @@
+#Solve a sudoku grid in python
+from collections import Counter
+
+idGrid = range(9)
+
+def validRow(board , row, number):
+    #Check if the number is in the row. 
+    # If it is, return False.
+    if number in board[row]:
+        return False
+    return True
+
+def validCol(board , col, number):
+    #Check if the number is in the column.
+    # If it is, return False.
+    for i in idGrid:
+        if number == board[i][col]:
+            return False
+    return True
+
+def validBox(board , row, col, number):
+    #Check if the number is in the 3 x 3 box.
+    # If it is, return False.
+    rowIn = (row//3)*3#rowIn can only have the values 0,3 or 6.
+    colIn = (col//3)*3#colIn can only have the values 0,3 or 6.
+    limRow = rowIn +3#limRow can only have the values 3,6 or 9 depending on rowIn.
+    limCol = colIn +3#limCol can only have the values 3,6 or 9 depending on colIn.
+    
+    while rowIn < limRow:
+        while colIn < limCol:
+            if number == board[rowIn][colIn]:
+                return False
+            colIn +=1
+        rowIn +=1
+        colIn = (col//3)*3
+    return True
+
+def validator(board,row,col,val):
+    #Check if the number is valid in the row, column and box.
+    # If it is, return False.
+    return (validRow(board,row,val) and 
+     validCol(board,col,val) and 
+    validBox(board , row,col,val))
+
+def initialValidator(board):
+    #Check if the initial values of the board are valid.
+    
+    #First, we check the rows.
+    for r in idGrid:
+        #We get every row.
+        counts = Counter(board[r])
+        #We count the number of times each number appears in the row.
+        for i in range(1,10):
+            if counts[i] > 1:
+                #If the number appears more than once, we return False.
+                return False
+    
+    #Then, we check the columns.
+    for c in idGrid:
+        #We get every column.
+        counts = Counter([board[i][c] for i in idGrid])
+        #We count the number of times each number appears in the column.
+        for i in range(1,10):
+            if counts[i] > 1:
+                #If the number appears more than once, we return False.
+                return False
+    
+    #And finally, we check the 9 boxes of 3 x 3.
+    for bRow in [0,3,6]:
+        #We give the posible values for the initial row of 3 x 3 boxes.
+        for  bCol in [0,3,6]:
+            #We give the posible values for the initial column of 3 x 3 boxes.
+            miniBox = []
+            for r in range(bRow,bRow+3):#It can be [0-3],[3-6] or [6-9]
+                for c in range(bCol,bCol+3):#It can be [0-3],[3-6] or [6-9]
+                    miniBox = miniBox + [board[r][c]]
+            counts = Counter(miniBox)
+            #We count the number of times each number appears in the box.
+            for i in range(1,10):
+                if counts[i] > 1:
+                    #If the number appears more than once, we return False.
+                    return False
+    return True
+
+
+def solvingAlg(board,row,col):
+    #We enter the row and column of the cell we want to start with.
+    #It makes the algorithm faster because it doesn't have to check the board from the beginning.
+    if initialValidator(board) == False:
+        return False
+    #We check if the initial values of the board are valid.
+    while row < 9:#While the row is less than 9
+        while col < 9:#While the column is less than 9
+            if board[row][col] == 0:#If the number is 0 we analyze it. 
+                #Otherwise, we move to the next number.
+                for val in [1,2,3,4,5,6,7,8,9]:
+                    #Evaluate all the posible values for the cell.
+                    if (validator(board,row,col,val)):
+                        #If the value is not in the row, column and box, we assign it.
+                        board[row][col] = val
+                        if solvingAlg(board,row,col+1):
+                            #If the value added to the board, solves the sudoku, we return True.
+                            return True
+                        board[row][col] = 0
+                        #If the value is not valid, we remove it and try the next "val".
+                return False
+                #We return False if after cheking all the values, none of them are valid.
+            col +=1
+        row +=1
+        col = 0
+    return True
+
+sudoku = [[9,0,1,0,0,0,0,0,0],
+         [0,0,0,0,0,0,0,0,0],
+         [0,1,0,0,0,0,0,0,0],
+         [0,0,0,0,0,0,0,0,0],
+         [0,0,0,0,0,0,0,0,0],
+         [0,0,0,0,0,0,0,0,0],
+         [0,0,0,0,0,0,0,0,0],
+         [0,0,0,0,0,0,0,0,0],
+         [0,0,0,0,0,0,0,0,0]]
+
+if solvingAlg(sudoku,0,0):
+    print("SUDOKU SOLVED!!")
+    for r in idGrid:
+        for c in idGrid:
+            print(sudoku[r][c],end=" ")
+        print()
+else:
+    print("The sudoku is not solvable")
